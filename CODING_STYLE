@@ -1,0 +1,15 @@
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+CODING STYLE
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+-Use Linux kernel coding style for C-style code
+https://github.com/torvalds/linux/blob/master/Documentation/process/coding-style.rst
+
+-Use C++ standard conventions for C++ code
+
+-Rationale behind most of the coding style: Dennis Ritchie & Brian Kernighan.
+
+
