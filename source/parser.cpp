@@ -6,32 +6,55 @@
 
 Parser::Parser()
 {
-	printf("Parser init\n");
-	m_file = NULL;
+	DEBUG_PRINT_DEBUG("Parser init\n");
+	m_input_file = NULL;
+	m_output_file = NULL;
 }
 
 Parser::~Parser()
 {
-	printf("Parser exit\n");
+	DEBUG_PRINT_DEBUG("Parser exit\n");
 }
 
+/*
+* Read input YUV file
+*/
 int Parser::read_file(char *filename, uint8_t *buf)
 {
-	printf("Parsing input file\n");
-	m_file = fopen(filename, "r");
-	if (!m_file) {
-		printf("Error opening input file: %s\n", filename);
+	DEBUG_PRINT_INFO("Parsing input file\n");
+	m_input_file = fopen(filename, "r");
+	if (!m_input_file) {
+		DEBUG_PRINT_ERROR("Error opening input file: %s\n", filename);
 		return -1;
 	}
 
-	fseek(m_file, 0, SEEK_END);
-	m_file_size = ftell(m_file);
-	fseek(m_file, 0, SEEK_SET);
+	fseek(m_input_file, 0, SEEK_END);
+	m_input_file_size = ftell(m_input_file);
+	fseek(m_input_file, 0, SEEK_SET);
 
-	buf = new uint8_t[m_file_size];
-	printf("file size : %lu\n", m_file_size);
+	buf = new uint8_t[m_input_file_size];
+	DEBUG_PRINT_INFO("file size : %lu\n", m_input_file_size);
 
 	return 0;
 }
 
+/*
+* Write decoded frames to output YUV file
+* Returns number of bytes written to YUV file
+*/
+size_t Parser::write_output_file(uint8_t *buf)
+{
+	size_t bytes_written = 0;
+	if (!buf)
+		return 0;
+
+	if (!m_output_file) {
+		m_output_file = fopen("out.yuv", "w");
+		if (!m_output_file) {
+			DEBUG_PRINT_ERROR("Error creating output file: %s\n", strerror(errno));
+			return 0;
+		}
+	}
+	return 0;
+}
 

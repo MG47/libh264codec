@@ -2,9 +2,10 @@
 * h264_decoder.h
 */
 
-#ifndef __h264_decoder__
-#define __h264_decoder__
+#ifndef __H264_DECODER_H__
+#define __H264_DECODER_H__
 
+#include "h264_common.h"
 #include "parser.h"
 
 class H264_decoder {
@@ -17,7 +18,7 @@ class H264_decoder {
 
 };
 
-#endif /*__h264_decoder__*/
+#endif /*__H264_DECODER_H__*/
 
 
 
