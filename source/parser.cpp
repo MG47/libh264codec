@@ -6,14 +6,14 @@
 
 Parser::Parser()
 {
-	DEBUG_PRINT_DEBUG("Parser init\n");
+	DEBUG_PRINT_DEBUG("Parser init");
 	m_input_file = NULL;
 	m_output_file = NULL;
 }
 
 Parser::~Parser()
 {
-	DEBUG_PRINT_DEBUG("Parser exit\n");
+	DEBUG_PRINT_DEBUG("Parser exit");
 }
 
 /*
@@ -21,10 +21,10 @@ Parser::~Parser()
 */
 int Parser::read_file(char *filename, uint8_t *buf)
 {
-	DEBUG_PRINT_INFO("Parsing input file\n");
+	DEBUG_PRINT_INFO("Parsing input file: %s", filename);
 	m_input_file = fopen(filename, "r");
 	if (!m_input_file) {
-		DEBUG_PRINT_ERROR("Error opening input file: %s\n", filename);
+		DEBUG_PRINT_ERROR("Error opening input file: %s", filename);
 		return -1;
 	}
 
@@ -33,7 +33,7 @@ int Parser::read_file(char *filename, uint8_t *buf)
 	fseek(m_input_file, 0, SEEK_SET);
 
 	buf = new uint8_t[m_input_file_size];
-	DEBUG_PRINT_INFO("file size : %lu\n", m_input_file_size);
+	DEBUG_PRINT_INFO("file size : %lu", m_input_file_size);
 
 	return 0;
 }

@@ -5,30 +5,21 @@
 #include <iostream>
 #include "../source/h264_decoder.h"
 
-void test_decode()
+void test_decode(char *filename)
 {
 	int ret;
-	std::cout << "Specify h264 file:" << std::endl;
-#if 0
-	//get input
-#else
-	#define FILENAME "iamlegend.h264"
-#endif
-
 	H264_decoder dec;
 
-	ret = dec.decode(FILENAME);
+	ret = dec.decode(filename);
 	if (ret)
-		std::cout << "Failed to decode " << FILENAME << std::endl;
+		std::cout << "Failed to decode " << filename << std::endl;
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	std::cout << "libh264 Test" << std::endl;
 
-
-	test_decode();
-
+	test_decode(argv[1]);
 
 	return 0;
 }
