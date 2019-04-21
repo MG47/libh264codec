@@ -1,24 +1,19 @@
-# Makefile for h264 decoder module
+.PHONY : clean
 
-CC = clang++ # CPP compiler
-CFLAGS = -Wall -Wextra -O2 -g # CPP flags
-LDFLAGS = -fPIC -shared  # linking flags
-RM = rm -f  # rm command
-TARGET_LIB = libh264dec.so # target lib
+CPPFLAGS= -fPIC -g
+LDFLAGS= -shared
 
-SRCS = parser.cpp h264_decoder.cpp # source files
-OBJS = $(SRCS:.cpp=.o)
+SOURCES = $(shell echo *.cpp)
+HEADERS = $(shell echo *.h)
+OBJECTS=$(SOURCES:.cpp=.o)
 
-.PHONY: all
-all: ${TARGET_LIB}
 
-$(TARGET_LIB): $(OBJS)
-	$(CC) ${LDFLAGS} -o $@ $^
+TARGET= libh264dec.so
 
-$(SRCS:.c):%.c
-	$(CC) $(CFLAGS) -MM $< >$@
-
-include $(SRCS:.c)
+all: $(TARGET)
 
 clean:
-	-${RM} ${TARGET_LIB} ${OBJS} $(SRCS:.c)
+	rm -f $(OBJECTS) $(TARGET)
+
+$(TARGET) : $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)

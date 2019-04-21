@@ -1,9 +1,9 @@
 /*
-* common.h
+* h264_common.h
 */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __H264_COMMON_H__
+#define __H264_COMMON_H__
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,9 +11,9 @@
 #include <string.h>
 
 #include "debug.h"
+#include "parser.h"
 
-
-#endif /*__COMMON_H__*/
+#endif /*__H264_COMMON_H__*/
 
 
 

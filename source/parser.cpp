@@ -17,9 +17,9 @@ Parser::~Parser()
 }
 
 /*
-* Read input YUV file
+* Open input bitstream file
 */
-int Parser::read_file(char *filename, uint8_t *buf)
+int Parser::open_file(char *filename, uint8_t *buf)
 {
 	DEBUG_PRINT_INFO("Parsing input file: %s", filename);
 	m_input_file = fopen(filename, "r");
@@ -51,10 +51,54 @@ size_t Parser::write_output_file(uint8_t *buf)
 	if (!m_output_file) {
 		m_output_file = fopen("out.yuv", "w");
 		if (!m_output_file) {
-			DEBUG_PRINT_ERROR("Error creating output file: %s\n", strerror(errno));
+			DEBUG_PRINT_ERROR("Error creating output file: %s", strerror(errno));
 			return 0;
 		}
 	}
 	return 0;
+}
+
+
+/*
+* Read one NAL unit from input file
+*/
+uint8_t *Parser::get_nalu()
+{
+	size_t cur_pos = ftell(m_input_file);
+	// 1000 for now
+	uint8_t *buf = new uint8_t[1000];
+	uint32_t code = 0, i = 0;
+	uint8_t current_byte = 0;
+
+	if (fread(buf, 4, 1, m_input_file) != 1) {
+		DEBUG_PRINT_ERROR("Error reading input file");
+		goto bailout;
+	}
+
+	if ((buf[0] << 24 | buf[1] << 16  | buf[2] << 8 | buf[3]) != 0x01) {
+		DEBUG_PRINT_DEBUG("Invalid start code");
+		goto bailout;
+	}
+
+	m_num_nal++;
+	while (!feof(m_input_file)) {
+		if (fread(&current_byte, 1, 1, m_input_file) != 1) {
+			DEBUG_PRINT_ERROR("Error reading input file");
+			goto bailout;
+		}
+
+		// if this is the start code, exit the loop
+		code = code << 8 | current_byte;
+		if (code == 0x01) {
+			fseek(m_input_file, -4, SEEK_CUR);
+			return buf;
+		}
+	}
+
+	return buf;
+bailout:
+	if (buf)
+		delete[] buf;
+	return NULL;
 }
 
