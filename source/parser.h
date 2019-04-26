@@ -11,9 +11,9 @@ class Parser {
 	public:
 		Parser();
 		~Parser();
-		int32_t open_file(char *in_file, uint8_t *buf);
+		uint32_t open_file(char *in_file);
 		size_t write_output_file(char *out_file, uint8_t *buf);
-		uint8_t *get_nalu();
+		int32_t get_nalu(uint8_t *buf);
 	private:
 		FILE *m_input_file;
 		FILE *m_output_file;

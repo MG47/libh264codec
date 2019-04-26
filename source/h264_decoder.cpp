@@ -19,38 +19,42 @@ H264_decoder::~H264_decoder()
 /*
 * Main decode routine
 */
-bool H264_decoder::decode(char *in_file, char *out_file)
+int32_t H264_decoder::decode(char *in_file, char *out_file)
 {
 	int ret = 0;
 	size_t bytes_written = 0;
 	uint8_t *buf;
 
 	DEBUG_PRINT_INFO("h264 decoder start decode");
-	ret = parser.open_file(in_file, buf);
-	if (ret)
-		return false;
+	ret = parser.open_file(in_file);
+	if (!ret)
+		return 0;
 
-	while (!ret) {
+	uint8_t *nal_buf = new uint8_t[ret];
+	while (1) {
 		DEBUG_PRINT_DEBUG("=================================");
 		DEBUG_PRINT_DEBUG("Reading NAL Unit");
-		ret = read_nalu();
+		ret = read_nalu(nal_buf);
+		if (ret <= 0)
+			break;
 	}
 
 	bytes_written = parser.write_output_file(out_file, buf);
 
+	delete[] nal_buf;
 	return ret;
 }
 
 /*
 * Read one NAL unit and get RBSP
 */
-int H264_decoder::read_nalu()
+int H264_decoder::read_nalu(uint8_t *nal_buf)
 {
-	uint8_t *nal_buf;
+	int32_t ret;
 
-	nal_buf = parser.get_nalu();
-	if (!nal_buf)
-		return -1;
+	ret = parser.get_nalu(nal_buf);
+	if (ret <= 0)
+		return ret;
 
 	m_num_nal++;
 
@@ -67,7 +71,7 @@ int H264_decoder::read_nalu()
 		return -1;
 	}
 
-	return 0;
+	return ret;
 }
 
 

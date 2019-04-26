@@ -11,7 +11,7 @@ void test_decode(char *input_filename, char *output_filename)
 	H264_decoder dec;
 
 	ret = dec.decode(input_filename, output_filename);
-	if (ret)
+	if (ret < 0)
 		std::cout << "Failed to decode " << input_filename << std::endl;
 }
 

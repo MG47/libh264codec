@@ -31,16 +31,39 @@ enum nal_unit_type {
 	filler_data_rbsp = 0xC,
 };
 
+/* SPS definitions */
+struct sps {
+	uint8_t profile_idc;
+	uint8_t constraint_set_flags;
+	uint8_t level_idc;
+	uint8_t seq_parameter_set_id;
+	uint8_t chroma_format_idc;
+};
+
+/* Session level info */
+struct session_info {
+	uint32_t width;
+	uint32_t height;
+	uint32_t bit_depth;
+	uint32_t frame_rate;
+	uint32_t profile;
+	uint32_t level;
+	uint32_t bitrate;
+};
+
+
 class H264_decoder {
 	public:
 		H264_decoder();
 		~H264_decoder();
-		bool decode(char *in_file, char *out_file);
+		int32_t decode(char *in_file, char *out_file);
 	private:
 		Parser parser;
-		int read_nalu();
+		int read_nalu(uint8_t *nal_buf);
 		uint32_t m_num_nal;
 		struct nal_header nh;
+		struct session_info sinfo;
+
 };
 
 #endif /*__H264_DECODER_H__*/
