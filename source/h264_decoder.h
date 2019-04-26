@@ -7,6 +7,7 @@
 
 #include "h264_common.h"
 
+/* NAL unit definitions */
 struct nal_header {
 	uint8_t forbidden_zero_bit;
 	uint8_t nal_ref_idc;
@@ -34,7 +35,7 @@ class H264_decoder {
 	public:
 		H264_decoder();
 		~H264_decoder();
-		bool decode(char *filename);
+		bool decode(char *in_file, char *out_file);
 	private:
 		Parser parser;
 		int read_nalu();

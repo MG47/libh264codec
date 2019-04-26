@@ -19,14 +19,14 @@ H264_decoder::~H264_decoder()
 /*
 * Main decode routine
 */
-bool H264_decoder::decode(char *filename)
+bool H264_decoder::decode(char *in_file, char *out_file)
 {
 	int ret = 0;
 	size_t bytes_written = 0;
 	uint8_t *buf;
 
 	DEBUG_PRINT_INFO("h264 decoder start decode");
-	ret = parser.open_file(filename, buf);
+	ret = parser.open_file(in_file, buf);
 	if (ret)
 		return false;
 
@@ -36,7 +36,7 @@ bool H264_decoder::decode(char *filename)
 		ret = read_nalu();
 	}
 
-	bytes_written = parser.write_output_file(buf);
+	bytes_written = parser.write_output_file(out_file, buf);
 
 	return ret;
 }
@@ -66,8 +66,6 @@ int H264_decoder::read_nalu()
 		DEBUG_PRINT_INFO("Corrupted bitstream, forbidden bit is non-zero");
 		return -1;
 	}
-
-	nh.nal_ref_idc = nal_buf[1] << 8 | nal_buf[0];
 
 	return 0;
 }

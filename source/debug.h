@@ -7,7 +7,7 @@
 
 #include "h264_common.h"
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define DEBUG_PRINT_DEBUG(fmt, args...) do { 	\
 		printf("DEBUG: %s:%s(): " fmt, 	\
