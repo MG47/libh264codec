@@ -80,7 +80,6 @@ int32_t Parser::get_nalu(uint8_t *buf)
 		return 0;
 	}
 
-	bytes_read += 4;
 	if ((buf[0] << 24 | buf[1] << 16  | buf[2] << 8 | buf[3]) != 0x01) {
 		DEBUG_PRINT_DEBUG("Invalid start code");
 		goto bailout;
@@ -94,7 +93,7 @@ int32_t Parser::get_nalu(uint8_t *buf)
 			}
 			return 0;
 		}
-
+		*buf++ = current_byte;
 		bytes_read++;
 		// if this is the start code, exit the loop
 		code = code << 8 | current_byte;
