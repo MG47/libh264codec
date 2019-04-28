@@ -40,7 +40,21 @@ struct sps {
 	uint8_t chroma_format_idc;
 };
 
+/* Supported profiles */
 #define PROFILE_BASELINE 0x42
+
+/* Supported levels */
+#define LEVEL_1 	0xA
+#define LEVEL_1_B 	0x9
+#define LEVEL_1_1 	0xB
+#define LEVEL_1_2 	0xC
+#define LEVEL_1_3 	0xD
+#define LEVEL_2 	0x14
+#define LEVEL_2_1 	0x15
+#define LEVEL_2_2 	0x16
+#define LEVEL_3 	0x1E
+
+
 
 #endif /*__SYNTAX_DEFS_H__*/
 

@@ -27,12 +27,18 @@ class H264_decoder {
 		int32_t decode(char *in_file, char *out_file);
 	private:
 		Parser parser;
+		struct session_info sinfo;
+
+		// nal
 		int read_nalu(uint8_t *nal_buf);
-		int parse_sps();
-		uint32_t sps_count;
 		uint32_t m_num_nal;
 		struct nal_header cur_nh;
-		struct session_info sinfo;
+		uint32_t cur_nal_len;
+
+		// sps
+		struct sps sps;
+		int parse_sps(uint8_t *nal_buf);
+		uint32_t sps_count;
 };
 
 #endif /*__H264_DECODER_H__*/
