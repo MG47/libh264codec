@@ -37,7 +37,18 @@ struct sps {
 	uint8_t constraint_set_flags;
 	uint8_t level_idc;
 	uint8_t seq_parameter_set_id;
-	uint8_t chroma_format_idc;
+	uint8_t log2_max_frame_num_minus4;
+	uint8_t log2_max_pic_order_cnt_lsb_minus4;
+	uint8_t pic_order_cnt_type;
+	uint32_t num_ref_frames;
+	uint8_t gaps_in_frame_num_value_allowed_flag;
+	uint32_t pic_width_in_mbs_minus_1;
+	uint32_t pic_height_in_map_units_minus_1;
+	uint8_t frame_mbs_only_flag;
+	uint8_t direct_8x8_inference_flag;
+	uint8_t frame_cropping_flag;
+	uint8_t vui_prameters_present_flag;
+	uint8_t rbsp_stop_one_bit;
 };
 
 /* Supported profiles */

@@ -1,6 +1,6 @@
 .PHONY : clean
 
-CPPFLAGS= -fPIC -g
+CPPFLAGS= -fPIC -g -DDEBUG
 LDFLAGS= -shared
 
 SOURCES = $(shell echo *.cpp)

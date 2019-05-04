@@ -7,6 +7,7 @@
 
 #include "h264_common.h"
 #include "syntax_defs.h"
+#include "h264_utils.h"
 
 /* Session level info */
 struct session_info {
@@ -39,6 +40,7 @@ class H264_decoder {
 		struct sps sps;
 		int parse_sps(uint8_t *nal_buf);
 		uint32_t sps_count;
+		uint32_t exp_goulomb_decode(void *buf, uint8_t *offset);
 };
 
 #endif /*__H264_DECODER_H__*/

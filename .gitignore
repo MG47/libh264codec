@@ -3,5 +3,6 @@ info
 *.o
 *.so
 *.h264
+*.264
 *.yuv
 out
