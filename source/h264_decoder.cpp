@@ -139,10 +139,10 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 		return -1;
 	}
 
-	sps.seq_parameter_set_id = exp_goulomb_decode(&nal_buf[4], &expG_offset);
+	sps.seq_parameter_set_id = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	DEBUG_PRINT_INFO("seq_parameter_set_id = %u", sps.seq_parameter_set_id);
 
-	sps.log2_max_frame_num_minus4 = exp_goulomb_decode(&nal_buf[4], &expG_offset);
+	sps.log2_max_frame_num_minus4 = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	if (sps.log2_max_frame_num_minus4 > 12) {
 		DEBUG_PRINT_ERROR(
 			"Invalid value for log2_max_frame_num_minus4: %u",
@@ -152,22 +152,46 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 	DEBUG_PRINT_INFO("log2_max_frame_num_minus4 = %u",
 		sps.log2_max_frame_num_minus4);
 
-	sps.pic_order_cnt_type = exp_goulomb_decode(&nal_buf[4], &expG_offset);
+	sps.pic_order_cnt_type = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	DEBUG_PRINT_INFO("pic_order_cnt_type = %u", sps.pic_order_cnt_type);
 
-	sps.log2_max_pic_order_cnt_lsb_minus4 = exp_goulomb_decode(&nal_buf[4], &expG_offset);
+	sps.log2_max_pic_order_cnt_lsb_minus4 = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	DEBUG_PRINT_INFO("log2_max_pic_order_cnt_lsb_minus4 = %u", sps.log2_max_pic_order_cnt_lsb_minus4);
 
-	sps.num_ref_frames = exp_goulomb_decode(&nal_buf[4], &expG_offset);
+	sps.num_ref_frames = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	DEBUG_PRINT_INFO("num_ref_frames = %u", sps.num_ref_frames);
 
-	//TODO verify
 	sps.gaps_in_frame_num_value_allowed_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("gaps_in_frame_num_value_allowed_flag = %u", sps.gaps_in_frame_num_value_allowed_flag);
 
-	sps.pic_width_in_mbs_minus_1 = exp_goulomb_decode(&nal_buf[4], &expG_offset);
+	sps.pic_width_in_mbs_minus_1 = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	DEBUG_PRINT_INFO("pic_width_in_mbs_minus_1 = %u", sps.pic_width_in_mbs_minus_1);
+
+	sps.pic_height_in_map_units_minus_1 = exp_golomb_decode(&nal_buf[4], &expG_offset);
+	DEBUG_PRINT_INFO("pic_height_in_map_units_minus_1 = %u", sps.pic_height_in_map_units_minus_1);
+
+	sps.frame_mbs_only_flag = get_bit(&nal_buf[4], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("frame_mbs_only_flag = %u", sps.frame_mbs_only_flag);
+
+	sps.direct_8x8_inference_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("direct_8x8_inference_flag = %u", sps.direct_8x8_inference_flag);
+
+	sps.frame_cropping_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("frame_cropping_flag = %u", sps.frame_cropping_flag);
+
+	sps.vui_prameters_present_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("vui_prameters_present_flag = %u", sps.vui_prameters_present_flag);
+
+	sps.rbsp_stop_one_bit = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("rbsp_stop_one_bit = %u", sps.rbsp_stop_one_bit);
+
+	// Fill session info
 
 	DEBUG_PRINT_INFO("---------------------");
 
@@ -175,16 +199,16 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 }
 
 /*
-* Unsigned Exp-Goulomb decoder
+* Unsigned Exp-Golomb decoder
+* Returns the first code num in provided buffer
+* Increments offset by number of bits parsed
 * Assumption : Max v in u(v) is 32
 */
-uint32_t H264_decoder::exp_goulomb_decode(void *buf, uint8_t *offset)
+uint32_t H264_decoder::exp_golomb_decode(void *buf, uint8_t *offset)
 {
 	uint32_t num = *(uint32_t *)buf;
-	uint8_t code = 0;
 	uint32_t no_of_zeros = 0, INFO = 0;
 
-	num = to_little_endian(num);
 	// count no of zeros
 	while (!get_bit(&num, (*offset)++)) {
 		no_of_zeros++;
@@ -192,12 +216,12 @@ uint32_t H264_decoder::exp_goulomb_decode(void *buf, uint8_t *offset)
 
 	// INFO = read no_of_zeros bits after 1
 	// code val = 2^(no_of_zeros) + INFO - 1
-	code = (1 << no_of_zeros);
+	INFO = (1 << no_of_zeros);
 	while (no_of_zeros--)
-		INFO = get_bit(&num, (*offset)++);
+		INFO |= get_bit(&num, (*offset)++) << no_of_zeros;
 
-	code += INFO - 1;
-	return code;
+	INFO--;
+	return INFO;
 }
 
 
