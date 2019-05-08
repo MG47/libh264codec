@@ -44,12 +44,16 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 
 		switch (cur_nh.nal_unit_type) {
 		case seq_parameter_set_rbsp:
+			sps_count++;
 			ret = parse_sps(nal_buf);
 			if (ret < 0)
 				return -1;
 			break;
 		case pic_parameter_set_rbsp:
-			DEBUG_PRINT_DEBUG("Parsing PPS");
+			pps_count++;
+			ret = parse_pps(nal_buf);
+			if (ret < 0)
+				return -1;
 			break;
 		case slice_layer_without_partitioning_rbsp_idr:
 			DEBUG_PRINT_DEBUG("Parsing Coded IDR slice");
@@ -140,6 +144,12 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 	}
 
 	sps.seq_parameter_set_id = exp_golomb_decode(&nal_buf[4], &expG_offset);
+	if (sps.seq_parameter_set_id > 31) {
+		DEBUG_PRINT_ERROR(
+			"Invalid value for seq_parameter_set_id: %u",
+			sps.seq_parameter_set_id);
+			return -1;
+	}
 	DEBUG_PRINT_INFO("seq_parameter_set_id = %u", sps.seq_parameter_set_id);
 
 	sps.log2_max_frame_num_minus4 = exp_golomb_decode(&nal_buf[4], &expG_offset);
@@ -153,15 +163,30 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 		sps.log2_max_frame_num_minus4);
 
 	sps.pic_order_cnt_type = exp_golomb_decode(&nal_buf[4], &expG_offset);
+	if (sps.pic_order_cnt_type > 2) {
+		DEBUG_PRINT_ERROR(
+			"Invalid value for pic_order_cnt_type: %u",
+			sps.pic_order_cnt_type);
+			return -1;
+	}
 	DEBUG_PRINT_INFO("pic_order_cnt_type = %u", sps.pic_order_cnt_type);
 
-	sps.log2_max_pic_order_cnt_lsb_minus4 = exp_golomb_decode(&nal_buf[4], &expG_offset);
-	DEBUG_PRINT_INFO("log2_max_pic_order_cnt_lsb_minus4 = %u", sps.log2_max_pic_order_cnt_lsb_minus4);
+	sps.log2_max_pic_order_cnt_lsb_minus4 =
+		exp_golomb_decode(&nal_buf[4], &expG_offset);
+	if (sps.log2_max_pic_order_cnt_lsb_minus4 > 12) {
+		DEBUG_PRINT_ERROR(
+			"Invalid value for log2_max_pic_order_cnt_lsb_minus4: %u",
+			sps.log2_max_pic_order_cnt_lsb_minus4);
+			return -1;
+	}
+	DEBUG_PRINT_INFO("log2_max_pic_order_cnt_lsb_minus4 = %u",
+		sps.log2_max_pic_order_cnt_lsb_minus4);
 
+	// TODO check spec again
 	sps.num_ref_frames = exp_golomb_decode(&nal_buf[4], &expG_offset);
 	DEBUG_PRINT_INFO("num_ref_frames = %u", sps.num_ref_frames);
 
-	sps.gaps_in_frame_num_value_allowed_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	sps.gaps_in_frame_num_value_allowed_flag = get_bit(&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("gaps_in_frame_num_value_allowed_flag = %u", sps.gaps_in_frame_num_value_allowed_flag);
 
@@ -172,29 +197,117 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 	DEBUG_PRINT_INFO("pic_height_in_map_units_minus_1 = %u", sps.pic_height_in_map_units_minus_1);
 
 	sps.frame_mbs_only_flag = get_bit(&nal_buf[4], expG_offset);
+	if (!sps.frame_mbs_only_flag) {
+		DEBUG_PRINT_ERROR(
+			"Frame-Field decoding is not supported");
+			return -1;
+	}
 	expG_offset++;
 	DEBUG_PRINT_INFO("frame_mbs_only_flag = %u", sps.frame_mbs_only_flag);
 
-	sps.direct_8x8_inference_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	sps.direct_8x8_inference_flag = get_bit(&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("direct_8x8_inference_flag = %u", sps.direct_8x8_inference_flag);
 
-	sps.frame_cropping_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	sps.frame_cropping_flag = get_bit(&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("frame_cropping_flag = %u", sps.frame_cropping_flag);
 
-	sps.vui_prameters_present_flag = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	sps.vui_prameters_present_flag = get_bit(&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("vui_prameters_present_flag = %u", sps.vui_prameters_present_flag);
 
-	sps.rbsp_stop_one_bit = get_bit((uint32_t *)&nal_buf[4], expG_offset);
+	sps.rbsp_stop_one_bit = get_bit(&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("rbsp_stop_one_bit = %u", sps.rbsp_stop_one_bit);
-
-	// Fill session info
-
 	DEBUG_PRINT_INFO("---------------------");
 
+	//TODO
+	DEBUG_PRINT_INFO("----------Session Info-----------");
+	sinfo.width = (sps.pic_width_in_mbs_minus_1 + 1) * 16;
+	sinfo.height = (sps.pic_height_in_map_units_minus_1 + 1) * 16;
+	sinfo.bit_depth = 0;
+	sinfo.frame_rate = 0;
+	sinfo.profile = sps.profile_idc;
+	sinfo.level = sps.level_idc;
+	sinfo.bitrate = 0;
+	DEBUG_PRINT_INFO("width = %u", sinfo.width);
+	DEBUG_PRINT_INFO("height = %u", sinfo.height);
+	DEBUG_PRINT_INFO("profile = %u", sinfo.profile);
+	DEBUG_PRINT_INFO("level = %u", sinfo.level);
+
+	return 0;
+}
+
+/*
+* Parse picture parameter set
+*/
+int H264_decoder::parse_pps(uint8_t *nal_buf)
+{
+	uint8_t expG_offset = 0;
+	DEBUG_PRINT_INFO("----------PPS-----------");
+
+	pps.pic_parameter_set_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("pic_parameter_set_id = %u", pps.pic_parameter_set_id);
+
+	pps.seq_parameter_set_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("seq_parameter_set_id = %u", pps.seq_parameter_set_id);
+
+	pps.entropy_coding_mode_flag = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("entropy_coding_mode_flag = %u", pps.entropy_coding_mode_flag);
+
+	pps.bottom_field_pic_order_in_frame_present_flag = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("bottom_field_pic_order_in_frame_present_flag = %u",
+		pps.bottom_field_pic_order_in_frame_present_flag);
+
+	pps.num_slice_groups_minus1 = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("num_slice_groups_minus1 = %u", pps.num_slice_groups_minus1);
+
+	if (pps.num_slice_groups_minus1 > 0) {
+		pps.slice_group_map_type = exp_golomb_decode(&nal_buf[1], &expG_offset);
+		DEBUG_PRINT_INFO("slice_group_map_type = %u", pps.slice_group_map_type);
+
+		//TODO slice_group_map_type value conditions
+
+	}
+
+	pps.num_ref_idx_l0_default_active_minus1 = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("num_ref_idx_l0_default_active_minus1 = %u",
+		pps.num_ref_idx_l0_default_active_minus1);
+
+	pps.num_ref_idx_l1_default_active_minus1 = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("num_ref_idx_l1_default_active_minus1 = %u",
+		pps.num_ref_idx_l1_default_active_minus1);
+
+	pps.weighted_pred_flag = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("weighted_pred_flag = %u", pps.weighted_pred_flag);
+
+	pps.weighted_bipred_idc = get_bit(&nal_buf[1], expG_offset) << 1 |
+		get_bit(&nal_buf[1], expG_offset + 1);
+	expG_offset += 2;
+	DEBUG_PRINT_INFO("weighted_bipred_idc = %u",pps.weighted_bipred_idc);
+
+
+
+
+#if 0
+	uint8_t pic_init_qp_minus26;
+	uint8_t pic_init_qs_minus26;
+	uint8_t chroma_qp_index_offset;
+	uint8_t deblocking_filter_control_present_flag;
+	uint8_t constrained_intra_pred_flag;
+	uint8_t redundant_pic_cnt_present_flag;
+	uint8_t transform_8x8_mode_flag;
+	uint8_t pic_scaling_matrix_present_flag;
+	uint8_t pic_scaling_list_present_flag;
+	uint8_t second_chroma_qp_index_offset;
+#endif
+
+
+	DEBUG_PRINT_INFO("---------------------");
 	return 0;
 }
 

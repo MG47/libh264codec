@@ -40,6 +40,12 @@ class H264_decoder {
 		struct sps sps;
 		int parse_sps(uint8_t *nal_buf);
 		uint32_t sps_count;
+
+		//pps
+		struct pps pps;
+		int parse_pps(uint8_t *nal_buf);
+		uint32_t pps_count;
+
 		uint32_t exp_golomb_decode(void *buf, uint8_t *offset);
 };
 
