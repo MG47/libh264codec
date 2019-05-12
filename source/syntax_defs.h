@@ -81,6 +81,35 @@ struct pps {
 	uint8_t second_chroma_qp_index_offset;
 };
 
+/* ================ Slice definitions ================ */
+struct slice_header {
+	uint8_t first_mb_in_slice;
+	uint8_t slice_type;
+	uint8_t pic_parameter_set_id;
+	uint8_t colour_plane_id;
+	uint8_t frame_num;
+	uint8_t field_pic_flag;
+	uint8_t bottom_field_flag;
+	uint8_t idr_pic_id;
+	uint8_t pic_order_cnt_lsb;
+	uint8_t delta_pic_order_cnt_bottom;
+	uint8_t delta_pic_order_cnt[2];
+	uint8_t redundant_pic_cnt;
+	uint8_t direct_spatial_mv_pred_flag;
+	uint8_t num_ref_idx_active_override_flag;
+	uint8_t num_ref_idx_l0_active_minus1;
+	uint8_t num_ref_idx_l1_active_minus1;
+	// TODO see other fields
+	uint8_t cabac_init_idc;
+	uint8_t slice_qp_delta;
+	uint8_t sp_for_switch_flag;
+	uint8_t slice_qs_delta;
+	uint8_t disable_deblocking_filter_idc;
+	uint8_t slice_alpha_c0_offset_div2;
+	uint8_t slice_beta_offset_div2;
+	uint8_t slice_group_change_cycle;
+};
+
 /* Supported profiles */
 #define PROFILE_BASELINE 0x42
 

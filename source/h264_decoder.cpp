@@ -58,6 +58,9 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 		case slice_layer_without_partitioning_rbsp_idr:
 			DEBUG_PRINT_DEBUG("Parsing Coded IDR slice");
 			// Temp code: write slice data to output yuv
+			ret = parse_slice_idr(nal_buf);
+			if (ret < 0)
+				return -1;
 			ret = parser.write_output_file(&nal_buf[5], (cur_nal_len - 5));
 			DEBUG_PRINT_DEBUG("Wrote %u bytes", ret);
 			break;
@@ -290,16 +293,32 @@ int H264_decoder::parse_pps(uint8_t *nal_buf)
 	expG_offset += 2;
 	DEBUG_PRINT_INFO("weighted_bipred_idc = %u",pps.weighted_bipred_idc);
 
+	// TODO signed golomb
+	pps.pic_init_qp_minus26 = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("pic_init_qp_minus26 = %u",pps.pic_init_qp_minus26);
 
+	// TODO signed golomb
+	pps.pic_init_qs_minus26 = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("pic_init_qs_minus26 = %u",pps.pic_init_qs_minus26);
 
+	// TODO signed golomb
+	pps.chroma_qp_index_offset = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("chroma_qp_index_offset = %u",pps.chroma_qp_index_offset);
+
+	pps.deblocking_filter_control_present_flag = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("deblocking_filter_control_present_flag = %u",
+		pps.deblocking_filter_control_present_flag);
+
+	pps.constrained_intra_pred_flag = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("constrained_intra_pred_flag = %u", pps.constrained_intra_pred_flag);
+
+	pps.redundant_pic_cnt_present_flag = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("redundant_pic_cnt_present_flag = %u", pps.redundant_pic_cnt_present_flag);
 
 #if 0
-	uint8_t pic_init_qp_minus26;
-	uint8_t pic_init_qs_minus26;
-	uint8_t chroma_qp_index_offset;
-	uint8_t deblocking_filter_control_present_flag;
-	uint8_t constrained_intra_pred_flag;
-	uint8_t redundant_pic_cnt_present_flag;
 	uint8_t transform_8x8_mode_flag;
 	uint8_t pic_scaling_matrix_present_flag;
 	uint8_t pic_scaling_list_present_flag;
@@ -308,6 +327,59 @@ int H264_decoder::parse_pps(uint8_t *nal_buf)
 
 
 	DEBUG_PRINT_INFO("---------------------");
+	return 0;
+}
+
+/*
+* Parse IDR slice
+*/
+int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
+{
+	uint8_t expG_offset = 0;
+	DEBUG_PRINT_INFO("----------IDR Slice-----------");
+
+
+	//TODO make struct for flags
+	uint8_t IdrPicFlag = 1;
+
+	sh.first_mb_in_slice = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("first_mb_in_slice = %u",sh.first_mb_in_slice);
+
+	sh.slice_type = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("slice_type = %u",sh.slice_type);
+
+	sh.pic_parameter_set_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("pic_parameter_set_id = %u",sh.pic_parameter_set_id);
+
+	// TODO condition separate_colour_plane_flag
+	sh.frame_num = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("frame_num = %u",sh.frame_num);
+
+	//TODO
+	if (!sps.frame_mbs_only_flag) {
+		// field_pic_flag
+		// if (field_pic_flag)
+		// bottom_field_flag
+	}
+
+	if (IdrPicFlag) {
+		sh.idr_pic_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
+		DEBUG_PRINT_INFO("idr_pic_id = %u",sh.idr_pic_id);
+	}
+
+	sh.pic_order_cnt_lsb = get_bit(&nal_buf[1], expG_offset);
+	expG_offset++;
+	DEBUG_PRINT_INFO("pic_order_cnt_lsb = %u",sh.pic_order_cnt_lsb);
+
+	//TODO other fields
+
+	//TODO signed golomb
+	sh.slice_qp_delta = exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("slice_qp_delta = %u",sh.slice_qp_delta);
+
+	DEBUG_PRINT_INFO("---------------------");
+
 	return 0;
 }
 

@@ -46,6 +46,11 @@ class H264_decoder {
 		int parse_pps(uint8_t *nal_buf);
 		uint32_t pps_count;
 
+		//slice
+		struct slice_header sh;
+		int parse_slice_idr(uint8_t *nal_buf);
+
+
 		uint32_t exp_golomb_decode(void *buf, uint8_t *offset);
 };
 
