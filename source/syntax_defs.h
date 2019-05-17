@@ -110,6 +110,17 @@ struct slice_header {
 	uint8_t slice_group_change_cycle;
 };
 
+/* ================ Macroblock definitions ================ */
+
+enum MB_TYPE {
+	I_PCM = 25,
+};
+
+struct mb_header {
+	uint8_t mb_type;
+};
+
+
 /* Supported profiles */
 #define PROFILE_BASELINE 0x42
 

@@ -57,12 +57,9 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 			break;
 		case slice_layer_without_partitioning_rbsp_idr:
 			DEBUG_PRINT_DEBUG("Parsing Coded IDR slice");
-			// Temp code: write slice data to output yuv
 			ret = parse_slice_idr(nal_buf);
 			if (ret < 0)
 				return -1;
-			ret = parser.write_output_file(&nal_buf[5], (cur_nal_len - 5));
-			DEBUG_PRINT_DEBUG("Wrote %u bytes", ret);
 			break;
 		default:
 			DEBUG_PRINT_ERROR("Unsupported NAL unit type %u", cur_nh.nal_unit_type);
@@ -343,18 +340,18 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 	uint8_t IdrPicFlag = 1;
 
 	sh.first_mb_in_slice = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("first_mb_in_slice = %u",sh.first_mb_in_slice);
+	DEBUG_PRINT_INFO("first_mb_in_slice = %u", sh.first_mb_in_slice);
 
 	sh.slice_type = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("slice_type = %u",sh.slice_type);
+	DEBUG_PRINT_INFO("slice_type = %u", sh.slice_type);
 
 	sh.pic_parameter_set_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("pic_parameter_set_id = %u",sh.pic_parameter_set_id);
+	DEBUG_PRINT_INFO("pic_parameter_set_id = %u", sh.pic_parameter_set_id);
 
 	// TODO condition separate_colour_plane_flag
 	sh.frame_num = get_bit(&nal_buf[1], expG_offset);
 	expG_offset++;
-	DEBUG_PRINT_INFO("frame_num = %u",sh.frame_num);
+	DEBUG_PRINT_INFO("frame_num = %u", sh.frame_num);
 
 	//TODO
 	if (!sps.frame_mbs_only_flag) {
@@ -365,18 +362,79 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 
 	if (IdrPicFlag) {
 		sh.idr_pic_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
-		DEBUG_PRINT_INFO("idr_pic_id = %u",sh.idr_pic_id);
+		DEBUG_PRINT_INFO("idr_pic_id = %u", sh.idr_pic_id);
 	}
 
 	sh.pic_order_cnt_lsb = get_bit(&nal_buf[1], expG_offset);
 	expG_offset++;
-	DEBUG_PRINT_INFO("pic_order_cnt_lsb = %u",sh.pic_order_cnt_lsb);
+	DEBUG_PRINT_INFO("pic_order_cnt_lsb = %u", sh.pic_order_cnt_lsb);
 
 	//TODO other fields
 
 	//TODO signed golomb
 	sh.slice_qp_delta = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("slice_qp_delta = %u",sh.slice_qp_delta);
+	DEBUG_PRINT_INFO("slice_qp_delta = %u", sh.slice_qp_delta);
+
+	/* -----------------------------------------------------------*/
+	/* TEMP code to write YUV directly */
+
+	/* SQCIF */
+	#define LUMA_WIDTH 128
+	#define LUMA_HEIGHT 96
+	#define CHROMA_WIDTH LUMA_WIDTH / 2
+	#define CHROMA_HEIGHT LUMA_HEIGHT / 2
+
+	struct frame
+	{
+		uint8_t Y[LUMA_HEIGHT][LUMA_WIDTH];
+		uint8_t Cb[CHROMA_HEIGHT][CHROMA_WIDTH];
+		uint8_t Cr[CHROMA_HEIGHT][CHROMA_WIDTH];
+	};
+
+
+	struct frame fr;
+	int i, j, x, y;
+	memset(&fr, 0, sizeof(struct frame));
+
+	uint32_t count = 1 + (expG_offset / 8);
+
+	for (i = 0; i < LUMA_HEIGHT/16 ; i++) {
+		for (j = 0; j < LUMA_WIDTH/16; j++) {
+
+			// hack .. skip macroblock header for now
+			count += 2;
+#if 0
+			//TODO macroblock header parsing
+			expG_offset += count;
+			mbh.mb_type = exp_golomb_decode(&nal_buf[1], &expG_offset);
+			if (mbh.mb_type != I_PCM) {
+				DEBUG_PRINT_ERROR("only I_PCM mb type is supported");
+					return -1;
+			}
+			DEBUG_PRINT_INFO("mb_type = %u", mbh.mb_type);
+
+			// TODO write byte_align()
+			while (expG_offset++ % 8);
+
+			uint32_t base = 1 + (expG_offset / 8);
+			count = base;
+#endif
+
+			for (x = i * 16; x < (i + 1) * 16; x++)
+				for (y = j * 16; y < (j + 1) *16; y++)
+					fr.Y[x][y] = nal_buf[count++];
+			for (x = i * 8; x < (i + 1) * 8; x++)
+				for (y = j * 8; y < (j + 1) * 8; y++)
+					fr.Cb[x][y] = nal_buf[count++];
+			for (x = i * 8; x < (i + 1) * 8; x++)
+				for (y = j * 8; y < (j + 1) * 8; y++)
+					fr.Cr[x][y] = nal_buf[count++];
+		}
+	}
+	parser.write_output_file((uint8_t *)&fr, sizeof(struct frame));
+	DEBUG_PRINT_DEBUG("bytes_written  = %u", count);
+	/* -----------------------------------------------------------*/
+
 
 	DEBUG_PRINT_INFO("---------------------");
 

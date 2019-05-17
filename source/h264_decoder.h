@@ -50,6 +50,8 @@ class H264_decoder {
 		struct slice_header sh;
 		int parse_slice_idr(uint8_t *nal_buf);
 
+		//macroblock
+		struct mb_header mbh;
 
 		uint32_t exp_golomb_decode(void *buf, uint8_t *offset);
 };
