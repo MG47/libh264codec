@@ -80,7 +80,7 @@ int32_t Parser::get_nalu(uint8_t *buf)
 	}
 
 	if (fread(buf, 4, 1, m_input_file) != 1) {
-		if (!feof) {
+		if (!feof(m_input_file)) {
 			DEBUG_PRINT_ERROR("Error reading input file: %s", strerror(errno));
 			goto bailout;
 		}
@@ -94,7 +94,7 @@ int32_t Parser::get_nalu(uint8_t *buf)
 
 	while (1) {
 		if (fread(&current_byte, 1, 1, m_input_file) != 1) {
-			if (!feof) {
+			if (!feof(m_input_file)) {
 				DEBUG_PRINT_ERROR("Error reading input file: %s", strerror(errno));
 				goto bailout;
 			}

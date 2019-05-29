@@ -8,6 +8,7 @@
 #include "h264_common.h"
 
 /* ================ NAL unit definitions ================ */
+
 struct nal_header {
 	uint8_t forbidden_zero_bit;
 	uint8_t nal_ref_idc;
@@ -32,6 +33,7 @@ enum nal_unit_type {
 };
 
 /* ================ SPS definitions ================ */
+
 struct sps {
 	uint8_t profile_idc;
 	uint8_t constraint_set_flags;
@@ -52,6 +54,7 @@ struct sps {
 };
 
 /* ================ PPS definitions ================ */
+
 struct pps {
 	uint8_t pic_parameter_set_id;
 	uint8_t seq_parameter_set_id;
@@ -82,6 +85,7 @@ struct pps {
 };
 
 /* ================ Slice definitions ================ */
+
 struct slice_header {
 	uint8_t first_mb_in_slice;
 	uint8_t slice_type;
@@ -120,6 +124,7 @@ struct mb_header {
 	uint8_t mb_type;
 };
 
+/* ================ Profiles and Levels ================ */
 
 /* Supported profiles */
 #define PROFILE_BASELINE 0x42

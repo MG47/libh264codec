@@ -6,8 +6,6 @@
 #define __H264_DECODER_H__
 
 #include "h264_common.h"
-#include "syntax_defs.h"
-#include "h264_utils.h"
 
 /* Session level info */
 struct session_info {

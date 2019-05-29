@@ -12,6 +12,8 @@
 
 #include "debug.h"
 #include "parser.h"
+#include "syntax_defs.h"
+#include "h264_utils.h"
 
 #endif /*__H264_COMMON_H__*/
 

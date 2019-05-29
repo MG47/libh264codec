@@ -6,3 +6,5 @@ info
 *.264
 *.yuv
 out
+build.sh
+encoder_out
