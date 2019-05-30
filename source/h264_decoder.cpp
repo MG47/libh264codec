@@ -12,6 +12,9 @@ H264_decoder::H264_decoder()
 	sps_count = 0;
 	memset(&cur_nh, 0, sizeof(struct nal_header));
 	memset(&sinfo, 0, sizeof(struct session_info));
+	memset(&sps, 0, sizeof(struct sps));
+	memset(&pps, 0, sizeof(struct pps));
+	memset(&mbh, 0, sizeof(struct mb_header));
 }
 
 H264_decoder::~H264_decoder()
@@ -378,28 +381,20 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 	/* -----------------------------------------------------------*/
 	/* TEMP code to write YUV directly */
 
-	/* SQCIF */
-	#define LUMA_WIDTH 128
-	#define LUMA_HEIGHT 96
-	#define CHROMA_WIDTH LUMA_WIDTH / 2
-	#define CHROMA_HEIGHT LUMA_HEIGHT / 2
-
-	struct frame
-	{
-		uint8_t Y[LUMA_HEIGHT][LUMA_WIDTH];
-		uint8_t Cb[CHROMA_HEIGHT][CHROMA_WIDTH];
-		uint8_t Cr[CHROMA_HEIGHT][CHROMA_WIDTH];
-	};
-
-
-	struct frame fr;
 	int i, j, x, y;
-	memset(&fr, 0, sizeof(struct frame));
-
 	uint32_t count = 1 + (expG_offset / 8);
+	uint32_t bytes_written = 0;
 
-	for (i = 0; i < LUMA_HEIGHT/16 ; i++) {
-		for (j = 0; j < LUMA_WIDTH/16; j++) {
+	uint32_t frame_size = sinfo.width * sinfo.height + 2 * (sinfo.width * sinfo.height / 4);
+	uint32_t cb_offset = sinfo.width * sinfo.height;
+	uint32_t cr_offset = cb_offset + sinfo.width * sinfo.height / 4;
+
+	static uint8_t *frm = NULL;
+	if (!frm)
+		frm = new uint8_t[3 * sinfo.width * sinfo.height / 2]();
+
+	for (i = 0; i < sinfo.height / 16 ; i++) {
+		for (j = 0; j < sinfo.width / 16; j++) {
 
 			//TODO remove i==0 j==0 conditions
 			//macroblock header parsing
@@ -416,19 +411,22 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 				count += 2;
 			}
 
+
+			//TODO remove hardcoding for mb size
 			for (x = i * 16; x < (i + 1) * 16; x++)
-				for (y = j * 16; y < (j + 1) *16; y++)
-					fr.Y[x][y] = nal_buf[count++];
+				for (y = j * 16; y < (j + 1) * 16; y++)
+					frm[x * sinfo.width + y] = nal_buf[count++];
 			for (x = i * 8; x < (i + 1) * 8; x++)
 				for (y = j * 8; y < (j + 1) * 8; y++)
-					fr.Cb[x][y] = nal_buf[count++];
+					frm[cb_offset + x * sinfo.width / 2 + y] = nal_buf[count++];
 			for (x = i * 8; x < (i + 1) * 8; x++)
 				for (y = j * 8; y < (j + 1) * 8; y++)
-					fr.Cr[x][y] = nal_buf[count++];
+					frm[cr_offset + x * sinfo.width / 2 + y] = nal_buf[count++];
 		}
 	}
-	parser.write_output_file((uint8_t *)&fr, sizeof(struct frame));
-	DEBUG_PRINT_DEBUG("bytes_written  = %u", count);
+
+	bytes_written = parser.write_output_file((uint8_t *)frm, frame_size);
+	DEBUG_PRINT_DEBUG("bytes_written  = %u", bytes_written);
 	/* -----------------------------------------------------------*/
 
 
