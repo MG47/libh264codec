@@ -401,24 +401,20 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 	for (i = 0; i < LUMA_HEIGHT/16 ; i++) {
 		for (j = 0; j < LUMA_WIDTH/16; j++) {
 
-			// hack .. skip macroblock header for now
-			count += 2;
-#if 0
-			//TODO macroblock header parsing
-			expG_offset += count;
-			mbh.mb_type = exp_golomb_decode(&nal_buf[1], &expG_offset);
-			if (mbh.mb_type != I_PCM) {
-				DEBUG_PRINT_ERROR("only I_PCM mb type is supported");
-					return -1;
+			//TODO remove i==0 j==0 conditions
+			//macroblock header parsing
+			if (!((i == 0) && (j == 0))) {
+				uint8_t local_offset = 0;
+				mbh.mb_type = exp_golomb_decode(&nal_buf[count], &local_offset);
+				if (mbh.mb_type != I_PCM) {
+					DEBUG_PRINT_ERROR("only I_PCM mb type is supported");
+							return -1;
+				}
+				DEBUG_PRINT_INFO("mb_type = %u", mbh.mb_type);
+				count += 1 + local_offset / 8;
+			} else {
+				count += 2;
 			}
-			DEBUG_PRINT_INFO("mb_type = %u", mbh.mb_type);
-
-			// TODO write byte_align()
-			while (expG_offset++ % 8);
-
-			uint32_t base = 1 + (expG_offset / 8);
-			count = base;
-#endif
 
 			for (x = i * 16; x < (i + 1) * 16; x++)
 				for (y = j * 16; y < (j + 1) *16; y++)
