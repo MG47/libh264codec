@@ -18,6 +18,13 @@ struct session_info {
 	uint32_t bitrate;
 };
 
+/* YUV420P frame structure */
+struct yuv420p_frame {
+	uint32_t frame_size; 	// size includes all three planes
+	uint32_t cb_offset; 	// offset of Cb plane within the frame
+	uint32_t cr_offset; 	// offset of Cr plane within the frame
+	uint8_t *frm_data;
+};
 
 class H264_decoder {
 	public:
@@ -50,6 +57,12 @@ class H264_decoder {
 
 		//macroblock
 		struct mb_header m_mbh;
+
+		// YUV420P frame
+		struct yuv420p_frame *m_frame;
+		struct yuv420p_frame *alloc_yuv420p_frame(
+			uint32_t width, uint32_t height);
+		void dealloc_yuv420p_frame(struct yuv420p_frame *frm);
 
 		uint32_t exp_golomb_decode(void *buf, uint8_t *offset);
 };

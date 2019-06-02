@@ -15,6 +15,7 @@ H264_decoder::H264_decoder()
 	memset(&m_sps, 0, sizeof(struct sps));
 	memset(&m_pps, 0, sizeof(struct pps));
 	memset(&m_mbh, 0, sizeof(struct mb_header));
+	m_frame = nullptr;
 }
 
 H264_decoder::~H264_decoder()
@@ -70,6 +71,7 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 		}
 	}
 
+	dealloc_yuv420p_frame(m_frame);
 	delete[] nal_buf;
 	return ret;
 }
@@ -379,19 +381,20 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 	DEBUG_PRINT_INFO("slice_qp_delta = %u", m_sh.slice_qp_delta);
 
 	/* -----------------------------------------------------------*/
-	/* TEMP code to write YUV directly */
+	/* TODO write a seprate function to write data to output YUV */
+
+	if (!m_frame) {
+		m_frame = alloc_yuv420p_frame(m_sinfo.width, m_sinfo.height);
+		if (!m_frame) {
+			DEBUG_PRINT_ERROR("Could not allocate a frame");
+			return -1;
+		}
+
+	}
 
 	int i, j, x, y;
 	uint32_t count = 1 + (expG_offset / 8);
 	uint32_t bytes_written = 0;
-
-	uint32_t frame_size = m_sinfo.width * m_sinfo.height + 2 * (m_sinfo.width * m_sinfo.height / 4);
-	uint32_t cb_offset = m_sinfo.width * m_sinfo.height;
-	uint32_t cr_offset = cb_offset + m_sinfo.width * m_sinfo.height / 4;
-
-	static uint8_t *frm = NULL;
-	if (!frm)
-		frm = new uint8_t[3 * m_sinfo.width * m_sinfo.height / 2]();
 
 	for (i = 0; i < m_sinfo.height / 16 ; i++) {
 		for (j = 0; j < m_sinfo.width / 16; j++) {
@@ -415,17 +418,19 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 			//TODO remove hardcoding for mb size
 			for (x = i * 16; x < (i + 1) * 16; x++)
 				for (y = j * 16; y < (j + 1) * 16; y++)
-					frm[x * m_sinfo.width + y] = nal_buf[count++];
+					m_frame->frm_data[x * m_sinfo.width + y] = nal_buf[count++];
 			for (x = i * 8; x < (i + 1) * 8; x++)
 				for (y = j * 8; y < (j + 1) * 8; y++)
-					frm[cb_offset + x * m_sinfo.width / 2 + y] = nal_buf[count++];
+					m_frame->frm_data[m_frame->cb_offset + x * m_sinfo.width / 2 + y]
+						= nal_buf[count++];
 			for (x = i * 8; x < (i + 1) * 8; x++)
 				for (y = j * 8; y < (j + 1) * 8; y++)
-					frm[cr_offset + x * m_sinfo.width / 2 + y] = nal_buf[count++];
+					m_frame->frm_data[m_frame->cr_offset + x * m_sinfo.width / 2 + y]
+						= nal_buf[count++];
 		}
 	}
 
-	bytes_written = m_parser.write_output_file((uint8_t *)frm, frame_size);
+	bytes_written = m_parser.write_output_file((uint8_t *)m_frame->frm_data, m_frame->frame_size);
 	DEBUG_PRINT_DEBUG("bytes_written  = %u", bytes_written);
 	/* -----------------------------------------------------------*/
 
@@ -461,4 +466,29 @@ uint32_t H264_decoder::exp_golomb_decode(void *buf, uint8_t *offset)
 	return INFO;
 }
 
+/*
+* Allocate YUV420P frame
+* Returns pointer to the frame structure
+*/
+struct yuv420p_frame *H264_decoder::alloc_yuv420p_frame(uint32_t width, uint32_t height)
+{
+	struct yuv420p_frame *frame;
+	frame = new yuv420p_frame;
+	frame->frame_size = width * height + 2 * (width * height / 4);
+	frame->cb_offset = width * height;
+	frame->cr_offset = frame->cb_offset + width * height / 4;
+	frame->frm_data = new uint8_t[3 * width * height / 2]();
+	return frame;
+}
+
+/*
+* Deallocate a frame
+*/
+void H264_decoder::dealloc_yuv420p_frame(struct yuv420p_frame *frame)
+{
+	if (!frame)
+		return;
+	delete[] frame->frm_data;
+	delete frame;
+}
 
