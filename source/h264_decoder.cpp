@@ -29,7 +29,6 @@ H264_decoder::~H264_decoder()
 int32_t H264_decoder::decode(char *in_file, char *out_file)
 {
 	int ret = 0;
-	size_t bytes_written = 0;
 	uint8_t *buf;
 
 	DEBUG_PRINT_INFO("h264 decoder start decode");
@@ -37,7 +36,7 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 	if (!ret)
 		return 0;
 
-		DEBUG_PRINT_INFO("buffer size %u", ret);
+	DEBUG_PRINT_INFO("buffer size %u", ret);
 
 
 	uint8_t *nal_buf = new uint8_t[ret];
@@ -60,7 +59,6 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 				return -1;
 			break;
 		case slice_layer_without_partitioning_rbsp_idr:
-			DEBUG_PRINT_DEBUG("Parsing Coded IDR slice");
 			ret = parse_slice_idr(nal_buf);
 			if (ret < 0)
 				return -1;
@@ -99,12 +97,12 @@ int H264_decoder::read_nalu(uint8_t *nal_buf)
 	DEBUG_PRINT_DEBUG("Length of NAL unit : %u", ret);
 
 
-	DEBUG_PRINT_DEBUG("forbidden = %u", m_cur_nh.forbidden_zero_bit);
-	DEBUG_PRINT_DEBUG("nal_ref_idc = %u", m_cur_nh.nal_ref_idc);
-	DEBUG_PRINT_DEBUG("nal_unit_type = %u", m_cur_nh.nal_unit_type);
+	DEBUG_PRINT_INFO("forbidden = %u", m_cur_nh.forbidden_zero_bit);
+	DEBUG_PRINT_INFO("nal_ref_idc = %u", m_cur_nh.nal_ref_idc);
+	DEBUG_PRINT_INFO("nal_unit_type = %u", m_cur_nh.nal_unit_type);
 
 	if (m_cur_nh.forbidden_zero_bit) {
-		DEBUG_PRINT_INFO("Corrupted bitstream, forbidden bit is non-zero");
+		DEBUG_PRINT_ERROR("Corrupted bitstream, forbidden bit is non-zero");
 		return -1;
 	}
 
@@ -120,7 +118,7 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 {
 	uint8_t expG_offset = 0;
 
-	DEBUG_PRINT_INFO("----------m_sps-----------");
+	DEBUG_PRINT_INFO("----------SPS-----------");
 
 	m_sps.profile_idc = nal_buf[1];
 	if (m_sps.profile_idc != PROFILE_BASELINE) {
@@ -176,16 +174,20 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 	}
 	DEBUG_PRINT_INFO("pic_order_cnt_type = %u", m_sps.pic_order_cnt_type);
 
-	m_sps.log2_max_pic_order_cnt_lsb_minus4 =
-		exp_golomb_decode(&nal_buf[4], &expG_offset);
-	if (m_sps.log2_max_pic_order_cnt_lsb_minus4 > 12) {
-		DEBUG_PRINT_ERROR(
-			"Invalid value for log2_max_pic_order_cnt_lsb_minus4: %u",
+	if (m_sps.pic_order_cnt_type == 0) {
+		m_sps.log2_max_pic_order_cnt_lsb_minus4 =
+			exp_golomb_decode(&nal_buf[4], &expG_offset);
+		if (m_sps.log2_max_pic_order_cnt_lsb_minus4 > 12) {
+			DEBUG_PRINT_ERROR(
+				"Invalid value for log2_max_pic_order_cnt_lsb_minus4: %u",
+				m_sps.log2_max_pic_order_cnt_lsb_minus4);
+				return -1;
+		}
+		DEBUG_PRINT_INFO("log2_max_pic_order_cnt_lsb_minus4 = %u",
 			m_sps.log2_max_pic_order_cnt_lsb_minus4);
-			return -1;
+	} else if (m_sps.pic_order_cnt_type == 1) {
+		// TODO add all conditions
 	}
-	DEBUG_PRINT_INFO("log2_max_pic_order_cnt_lsb_minus4 = %u",
-		m_sps.log2_max_pic_order_cnt_lsb_minus4);
 
 	// TODO check spec again
 	m_sps.num_ref_frames = exp_golomb_decode(&nal_buf[4], &expG_offset);
@@ -250,7 +252,7 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 int H264_decoder::parse_pps(uint8_t *nal_buf)
 {
 	uint8_t expG_offset = 0;
-	DEBUG_PRINT_INFO("----------m_pps-----------");
+	DEBUG_PRINT_INFO("----------PPS-----------");
 
 	m_pps.pic_parameter_set_id = exp_golomb_decode(&nal_buf[1], &expG_offset);
 	DEBUG_PRINT_INFO("pic_parameter_set_id = %u", m_pps.pic_parameter_set_id);

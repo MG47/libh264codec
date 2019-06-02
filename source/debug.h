@@ -14,7 +14,7 @@
 		printf("\n"); \
 	} while(0)
 #else
-#define DEBUG_PRINT_DEBUG
+#define DEBUG_PRINT_DEBUG(fmt, args...)
 #endif
 
 #define DEBUG_PRINT_INFO(fmt, args...) do { 	\

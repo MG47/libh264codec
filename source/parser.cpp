@@ -1,5 +1,6 @@
 /*
-* parser.h
+* parser.cpp
+* File I/O operations for input/output YUV/h264 bitstream
 */
 
 #include "parser.h"
