@@ -63,6 +63,11 @@ int32_t H264_decoder::decode(char *in_file, char *out_file)
 			if (ret < 0)
 				return -1;
 			break;
+		case sei_rbsp:
+			ret = parse_sei(nal_buf);
+			if (ret < 0)
+				return -1;
+			break;
 		default:
 			DEBUG_PRINT_ERROR("Unsupported NAL unit type %u", m_cur_nh.nal_unit_type);
 			return -1;
@@ -224,6 +229,9 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 	expG_offset++;
 	DEBUG_PRINT_INFO("vui_prameters_present_flag = %u", m_sps.vui_prameters_present_flag);
 
+	if (m_sps.vui_prameters_present_flag)
+		parse_vui(nal_buf, &expG_offset);
+
 	m_sps.rbsp_stop_one_bit = get_bit(&nal_buf[4], expG_offset);
 	expG_offset++;
 	DEBUG_PRINT_INFO("rbsp_stop_one_bit = %u", m_sps.rbsp_stop_one_bit);
@@ -243,6 +251,19 @@ int H264_decoder::parse_sps(uint8_t *nal_buf)
 	DEBUG_PRINT_INFO("profile = %u", m_sinfo.profile);
 	DEBUG_PRINT_INFO("level = %u", m_sinfo.level);
 
+	return 0;
+}
+
+/*
+* Parse VUI info
+*/
+int H264_decoder::parse_vui(uint8_t *nal_buf, uint8_t *offset)
+{
+	DEBUG_PRINT_INFO("----------VUI-----------");
+
+	//TODO
+
+	DEBUG_PRINT_INFO("---------------------");
 	return 0;
 }
 
@@ -334,6 +355,20 @@ int H264_decoder::parse_pps(uint8_t *nal_buf)
 	return 0;
 }
 
+
+/*
+* Parse SEI message
+*/
+int H264_decoder::parse_sei(uint8_t *nal_buf)
+{
+	DEBUG_PRINT_INFO("----------SEI-----------");
+
+	//TODO
+
+	DEBUG_PRINT_INFO("---------------------");
+	return 0;
+}
+
 /*
 * Parse IDR slice
 */
@@ -408,7 +443,7 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 				m_mbh.mb_type = exp_golomb_decode(&nal_buf[count], &local_offset);
 				if (m_mbh.mb_type != I_PCM) {
 					DEBUG_PRINT_ERROR("only I_PCM mb type is supported");
-							return -1;
+					return -1;
 				}
 				DEBUG_PRINT_INFO("mb_type = %u", m_mbh.mb_type);
 				count += 1 + local_offset / 8;

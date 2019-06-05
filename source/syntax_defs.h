@@ -114,6 +114,125 @@ struct slice_header {
 	uint8_t slice_group_change_cycle;
 };
 
+/* ================ SEI message - Annex D ================ */
+
+struct sei {
+
+#if 0
+buffering_period
+pic_timing
+pan_scan_rect
+filler_payload
+user_data_registered_itu_t_t35
+user_data_unregistered
+recovery_point
+dec_ref_pic_marking_repetition
+spare_pic
+scene_info
+sub_seq_info
+sub_seq_layer_characteristics
+sub_seq_characteristics
+full_frame_freeze
+full_frame_freeze_release
+full_frame_snapshot
+progressive_refinement_segment_start
+progressive_refinement_segment_end
+motion_constrained_slice_group_set
+film_grain_characteristics
+deblocking_filter_display_preference
+stereo_video_info
+post_filter_hint
+tone_mapping_info
+scalability_info
+sub_pic_scalable_layer
+non_required_layer_rep
+priority_layer_info
+layers_not_present
+layer_dependency_change
+scalable_nesting
+base_layer_temporal_hrd
+quality_layer_integrity_check
+redundant_pic_property
+tl0_dep_rep_index
+tl_switching_point
+parallel_decoding_info
+view_scalability_info
+multiview_scene_info
+multiview_acquisition_info
+non_required_view_component
+view_dependency_change
+operation_points_not_present
+base_view_temporal_hrd
+frame_packing_arrangement
+multiview_view_position
+display_orientation
+mvcd_scalable_nesting
+mvcd_view_scalability_info
+depth_representation_info
+three_dimensional_reference_displays_info
+depth_timing
+depth_sampling_info
+constrained_depth_parameter_set_identifier
+green_metadata
+mastering_display_colour_volume
+colour_remapping_info
+alternative_transfer_characteristics
+alternative_depth_info
+reserved_sei_message
+#endif
+
+};
+
+/* ================ VUI parameters - Annex E ================ */
+
+struct hrd_parameters {
+	uint8_t cpb_cnt_minus1;
+	uint8_t bit_rate_scale;
+	uint8_t cpb_size_scale;
+	uint8_t bit_rate_value_minus1;
+	uint8_t cpb_size_value_minus1;
+	uint8_t cbr_flag;
+	uint8_t initial_cpb_removal_delay_length_minus1;
+	uint8_t cpb_removal_delay_length_minus1;
+	uint8_t dpb_output_delay_length_minus1;
+	uint8_t time_offset_length;
+};
+
+struct vui_parameters {
+	uint8_t aspect_ratio_info_present_flag;
+	uint8_t aspect_ratio_idc;
+	uint16_t sar_width;
+	uint16_t sar_height;
+	uint8_t overscan_info_present_flag;
+	uint8_t overscan_appropriate_flag;
+	uint8_t video_signal_type_present_flag;
+	uint8_t video_format;
+	uint8_t video_full_range_flag;
+	uint8_t colour_description_present_flag;
+	uint8_t colour_primaries;
+	uint8_t transfer_characteristics;
+	uint8_t matrix_coefficients;
+	uint8_t chroma_loc_info_present_flag;
+	uint8_t chroma_sample_loc_type_top_field;
+	uint8_t chroma_sample_loc_type_bottom_field;
+	uint8_t timing_info_present_flag;
+	uint32_t num_units_in_tick;
+	uint32_t time_scale;
+	uint8_t fixed_frame_rate_flag;
+	uint8_t nal_hrd_parameters_present_flag;
+	uint8_t vcl_hrd_parameters_present_flag;
+	uint8_t low_delay_hrd_flag;
+	uint8_t pic_struct_present_flag;
+	uint8_t motion_vectors_over_pic_boundaries_flag;
+	uint8_t max_bytes_per_pic_denom;
+	uint8_t max_bits_per_mb_denom;
+	uint8_t log2_max_mv_length_horizontal;
+	uint8_t log2_max_mv_length_vertical;
+	uint8_t max_num_reorder_frames;
+	uint8_t max_dec_frame_buffering;
+	struct hrd_parameters hrd_params;
+};
+
 /* ================ Macroblock definitions ================ */
 
 enum MB_TYPE {

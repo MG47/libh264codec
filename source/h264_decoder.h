@@ -45,17 +45,22 @@ class H264_decoder {
 		struct sps m_sps;
 		int parse_sps(uint8_t *nal_buf);
 		uint32_t m_sps_count;
+		int parse_vui(uint8_t *nal_buf, uint8_t *offset);
 
-		//pps
+		// pps
 		struct pps m_pps;
 		int parse_pps(uint8_t *nal_buf);
 		uint32_t m_pps_count;
 
-		//slice
+		// sei
+		struct sei m_sei;
+		int parse_sei(uint8_t *nal_buf);
+
+		// slice
 		struct slice_header m_sh;
 		int parse_slice_idr(uint8_t *nal_buf);
 
-		//macroblock
+		// macroblock
 		struct mb_header m_mbh;
 
 		// YUV420P frame
