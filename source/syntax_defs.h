@@ -16,20 +16,20 @@ struct nal_header {
 };
 
 enum nal_unit_type {
-	Unspecified = 0x0,
-	slice_layer_without_partitioning_rbsp = 0x1,
-	slice_data_partition_a_layer_rbsp = 0x2,
-	slice_data_partition_b_layer_rbsp = 0x3,
-	slice_data_partition_c_layer_rbsp = 0x4,
+	Unspecified 					= 0x0,
+	slice_layer_without_partitioning_rbsp 		= 0x1,
+	slice_data_partition_a_layer_rbsp 		= 0x2,
+	slice_data_partition_b_layer_rbsp 		= 0x3,
+	slice_data_partition_c_layer_rbsp 		= 0x4,
 	/* TODO fix name */
-	slice_layer_without_partitioning_rbsp_idr = 0x5,
-	sei_rbsp = 0x6,
-	seq_parameter_set_rbsp = 0x7,
-	pic_parameter_set_rbsp = 0x8,
-	access_unit_delimiter_rbsp = 0x9,
-	end_of_seq_rbsp = 0xA,
-	end_of_stream_rbsp = 0xB,
-	filler_data_rbsp = 0xC,
+	slice_layer_without_partitioning_rbsp_idr 	= 0x5,
+	sei_rbsp 					= 0x6,
+	seq_parameter_set_rbsp 				= 0x7,
+	pic_parameter_set_rbsp 				= 0x8,
+	access_unit_delimiter_rbsp 			= 0x9,
+	end_of_seq_rbsp 				= 0xA,
+	end_of_stream_rbsp 				= 0xB,
+	filler_data_rbsp 				= 0xC,
 };
 
 /* ================ SPS definitions ================ */
@@ -246,18 +246,23 @@ struct mb_header {
 /* ================ Profiles and Levels ================ */
 
 /* Supported profiles */
-#define PROFILE_BASELINE 0x42
+enum h264_profiles {
+	PROFILE_BASELINE  = 0x42,
+};
 
 /* Supported levels */
-#define LEVEL_1 	0xA
-#define LEVEL_1_B 	0x9
-#define LEVEL_1_1 	0xB
-#define LEVEL_1_2 	0xC
-#define LEVEL_1_3 	0xD
-#define LEVEL_2 	0x14
-#define LEVEL_2_1 	0x15
-#define LEVEL_2_2 	0x16
-#define LEVEL_3 	0x1E
+enum h264_levels  {
+	LEVEL_1 	= 0xA,
+	LEVEL_1_B 	= 0x9,
+	LEVEL_1_1 	= 0xB,
+	LEVEL_1_2 	= 0xC,
+	LEVEL_1_3 	= 0xD,
+	LEVEL_2 	= 0x14,
+	LEVEL_2_1 	= 0x15,
+	LEVEL_2_2 	= 0x16,
+	LEVEL_3 	= 0x1E,
+};
+
 
 
 
