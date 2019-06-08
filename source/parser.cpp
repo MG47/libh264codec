@@ -88,9 +88,14 @@ int32_t Parser::get_nalu(uint8_t *buf)
 		return 0;
 	}
 
+	// check for 4-byte start code
 	if ((buf[0] << 24 | buf[1] << 16  | buf[2] << 8 | buf[3]) != 0x01) {
-		DEBUG_PRINT_DEBUG("Invalid start code");
-		goto bailout;
+		// check for 3-byte start code
+		if ((buf[0] << 16 | buf[1] << 8  | buf[2]) != 0x01) {
+			DEBUG_PRINT_ERROR("Invalid start code");
+			goto bailout;
+		}
+		fseek(m_input_file, -1, SEEK_CUR);
 	}
 
 	while (1) {
@@ -109,6 +114,10 @@ int32_t Parser::get_nalu(uint8_t *buf)
 		if (code == 0x01) {
 			bytes_read -= 4;
 			fseek(m_input_file, -4, SEEK_CUR);
+			return bytes_read;
+		} else if ((code & 0x00FFFFFF) == 0x01) {
+			bytes_read -= 3;
+			fseek(m_input_file, -3, SEEK_CUR);
 			return bytes_read;
 		}
 
