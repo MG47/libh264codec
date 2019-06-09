@@ -117,6 +117,8 @@ struct slice_header {
 /* ================ SEI message - Annex D ================ */
 
 struct sei {
+	uint8_t payloadType;
+	uint32_t payloadSize;
 
 #if 0
 buffering_period

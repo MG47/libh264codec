@@ -14,6 +14,7 @@ H264_decoder::H264_decoder()
 	memset(&m_sinfo, 0, sizeof(struct session_info));
 	memset(&m_sps, 0, sizeof(struct sps));
 	memset(&m_pps, 0, sizeof(struct pps));
+	memset(&m_sei, 0, sizeof(struct sei));
 	memset(&m_mbh, 0, sizeof(struct mb_header));
 	m_frame = nullptr;
 }
@@ -363,7 +364,18 @@ int H264_decoder::parse_sei(uint8_t *nal_buf)
 {
 	DEBUG_PRINT_INFO("----------SEI-----------");
 
-	//TODO
+	nal_buf++;
+	while (*nal_buf++ == 0xFF)
+		m_sei.payloadType += 0xFF;
+
+	m_sei.payloadType += *(nal_buf - 1);
+	DEBUG_PRINT_INFO("SEI payloadType = %u", m_sei.payloadType);
+
+	while (*nal_buf++ == 0xFF)
+		m_sei.payloadSize += 0xFF;
+
+	m_sei.payloadSize += *(nal_buf - 1);
+	DEBUG_PRINT_INFO("SEI payloadSize = %u", m_sei.payloadSize);
 
 	DEBUG_PRINT_INFO("---------------------");
 	return 0;
