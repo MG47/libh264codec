@@ -72,9 +72,9 @@ struct pps {
 	uint8_t num_ref_idx_l1_default_active_minus1;
 	uint8_t weighted_pred_flag;
 	uint8_t weighted_bipred_idc;
-	uint8_t pic_init_qp_minus26;
-	uint8_t pic_init_qs_minus26;
-	uint8_t chroma_qp_index_offset;
+	int8_t pic_init_qp_minus26;
+	int8_t pic_init_qs_minus26;
+	int8_t chroma_qp_index_offset;
 	uint8_t deblocking_filter_control_present_flag;
 	uint8_t constrained_intra_pred_flag;
 	uint8_t redundant_pic_cnt_present_flag;
@@ -105,7 +105,7 @@ struct slice_header {
 	uint8_t num_ref_idx_l1_active_minus1;
 	// TODO see other fields
 	uint8_t cabac_init_idc;
-	uint8_t slice_qp_delta;
+	int8_t slice_qp_delta;
 	uint8_t sp_for_switch_flag;
 	uint8_t slice_qs_delta;
 	uint8_t disable_deblocking_filter_idc;
@@ -238,7 +238,32 @@ struct vui_parameters {
 /* ================ Macroblock definitions ================ */
 
 enum MB_TYPE {
-	I_PCM = 25,
+	I_NxN		= 0,
+	I_16x16_0_0_0	= 1,
+	I_16x16_1_0_0	= 2,
+	I_16x16_2_0_0	= 3,
+	I_16x16_3_0_0	= 4,
+	I_16x16_0_1_0	= 5,
+	I_16x16_1_1_0	= 6,
+	I_16x16_2_1_0	= 7,
+	I_16x16_3_1_0	= 8,
+	I_16x16_0_2_0	= 9,
+	I_16x16_1_2_0	= 10,
+	I_16x16_2_2_0	= 11,
+	I_16x16_3_2_0	= 12,
+	I_16x16_0_0_1	= 13,
+	I_16x16_1_0_1	= 14,
+	I_16x16_2_0_1	= 15,
+	I_16x16_3_0_1	= 16,
+	I_16x16_0_1_1	= 17,
+	I_16x16_1_1_1	= 18,
+	I_16x16_2_1_1	= 19,
+	I_16x16_3_1_1	= 20,
+	I_16x16_0_2_1	= 21,
+	I_16x16_1_2_1	= 22,
+	I_16x16_2_2_1	= 23,
+	I_16x16_3_2_1	= 24,
+	I_PCM		= 25,
 };
 
 struct mb_header {

@@ -70,6 +70,7 @@ class H264_decoder {
 		void dealloc_yuv420p_frame(struct yuv420p_frame *frm);
 
 		uint32_t exp_golomb_decode(void *buf, uint8_t *offset);
+		int32_t signed_exp_golomb_decode(void *buf, uint8_t *offset);
 };
 
 #endif /*__H264_DECODER_H__*/

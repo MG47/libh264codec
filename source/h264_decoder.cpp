@@ -319,17 +319,14 @@ int H264_decoder::parse_pps(uint8_t *nal_buf)
 	expG_offset += 2;
 	DEBUG_PRINT_INFO("weighted_bipred_idc = %u",m_pps.weighted_bipred_idc);
 
-	// TODO signed golomb
-	m_pps.pic_init_qp_minus26 = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("pic_init_qp_minus26 = %u",m_pps.pic_init_qp_minus26);
+	m_pps.pic_init_qp_minus26 = signed_exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("pic_init_qp_minus26 = %d",m_pps.pic_init_qp_minus26);
 
-	// TODO signed golomb
-	m_pps.pic_init_qs_minus26 = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("pic_init_qs_minus26 = %u",m_pps.pic_init_qs_minus26);
+	m_pps.pic_init_qs_minus26 = signed_exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("pic_init_qs_minus26 = %d",m_pps.pic_init_qs_minus26);
 
-	// TODO signed golomb
-	m_pps.chroma_qp_index_offset = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("chroma_qp_index_offset = %u",m_pps.chroma_qp_index_offset);
+	m_pps.chroma_qp_index_offset = signed_exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("chroma_qp_index_offset = %d",m_pps.chroma_qp_index_offset);
 
 	m_pps.deblocking_filter_control_present_flag = get_bit(&nal_buf[1], expG_offset);
 	expG_offset++;
@@ -425,9 +422,8 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 
 	//TODO other fields
 
-	//TODO signed golomb
-	m_sh.slice_qp_delta = exp_golomb_decode(&nal_buf[1], &expG_offset);
-	DEBUG_PRINT_INFO("slice_qp_delta = %u", m_sh.slice_qp_delta);
+	m_sh.slice_qp_delta = signed_exp_golomb_decode(&nal_buf[1], &expG_offset);
+	DEBUG_PRINT_INFO("slice_qp_delta = %d", m_sh.slice_qp_delta);
 
 	/* -----------------------------------------------------------*/
 	/* TODO write a seprate function to write data to output YUV */
@@ -514,6 +510,26 @@ uint32_t H264_decoder::exp_golomb_decode(void *buf, uint8_t *offset)
 	INFO--;
 	return INFO;
 }
+
+/*
+* Signed Exp-Golomb decoder
+* Returns mapped k from the first code num in the provided buffer
+* Increments offset by number of bits parsed
+* Assumption : Max v in se(v) is 32
+*/
+int32_t H264_decoder::signed_exp_golomb_decode(void *buf, uint8_t *offset)
+{
+	uint32_t code_num;
+	int32_t k;
+
+	code_num = exp_golomb_decode(buf, offset);
+
+	/* Map code_num to k */
+        k = pow((-1.0), (code_num + 1)) * (int32_t)ceil(code_num / 2);
+
+	return k;
+}
+
 
 /*
 * Allocate YUV420P frame

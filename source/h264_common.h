@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <cmath>
+
 #include "debug.h"
 #include "parser.h"
 #include "syntax_defs.h"
