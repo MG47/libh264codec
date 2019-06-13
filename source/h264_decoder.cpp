@@ -10,11 +10,13 @@ H264_decoder::H264_decoder()
 	Parser m_parser;
 	m_num_nal = 0;
 	m_sps_count = 0;
+	m_pps_count = 0;
 	memset(&m_cur_nh, 0, sizeof(struct nal_header));
 	memset(&m_sinfo, 0, sizeof(struct session_info));
 	memset(&m_sps, 0, sizeof(struct sps));
 	memset(&m_pps, 0, sizeof(struct pps));
 	memset(&m_sei, 0, sizeof(struct sei));
+	memset(&m_sh, 0, sizeof(struct slice_header));
 	memset(&m_mbh, 0, sizeof(struct mb_header));
 	m_frame = nullptr;
 }
@@ -30,15 +32,13 @@ H264_decoder::~H264_decoder()
 int32_t H264_decoder::decode(char *in_file, char *out_file)
 {
 	int ret = 0;
-	uint8_t *buf;
 
 	DEBUG_PRINT_INFO("h264 decoder start decode");
 	ret = m_parser.open_file(in_file, out_file);
 	if (!ret)
 		return 0;
 
-	DEBUG_PRINT_INFO("buffer size %u", ret);
-
+	DEBUG_PRINT_INFO("buffer size %d", ret);
 
 	uint8_t *nal_buf = new uint8_t[ret];
 	while (1) {

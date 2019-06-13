@@ -1,7 +1,7 @@
 .PHONY : clean
 
 CXX= clang++
-CPPFLAGS= -fPIC -g -DDEBUG
+CPPFLAGS= -fPIC -g -DDEBUG -Wall
 LDFLAGS= -shared
 
 SOURCES = $(shell echo *.cpp)

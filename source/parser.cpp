@@ -10,6 +10,7 @@ Parser::Parser()
 	DEBUG_PRINT_DEBUG("Parser init");
 	m_input_file = NULL;
 	m_output_file = NULL;
+	m_input_file_size = 0;
 }
 
 Parser::~Parser()
@@ -70,9 +71,8 @@ size_t Parser::write_output_file(uint8_t *buf, uint32_t len)
 */
 int32_t Parser::get_nalu(uint8_t *buf)
 {
-	size_t cur_pos = ftell(m_input_file);
 	// 1000 for now
-	uint32_t code = 0, i = 0, bytes_read = 0;
+	uint32_t code = 0, bytes_read = 0;
 	uint8_t current_byte = 0;
 
 	if (!buf) {
