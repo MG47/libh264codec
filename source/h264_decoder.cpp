@@ -400,8 +400,12 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 	DEBUG_PRINT_INFO("pic_parameter_set_id = %u", m_sh.pic_parameter_set_id);
 
 	// TODO condition separate_colour_plane_flag
-	m_sh.frame_num = get_bit(&nal_buf[1], expG_offset);
-	expG_offset++;
+
+	int frame_num_bits = m_sps.log2_max_frame_num_minus4 + 4;
+	m_sh.frame_num = get_n_bits(&nal_buf[1], expG_offset, frame_num_bits);
+	expG_offset += frame_num_bits;
+	DEBUG_PRINT_INFO("frame_num bits= %u", frame_num_bits);
+
 	DEBUG_PRINT_INFO("frame_num = %u", m_sh.frame_num);
 
 	//TODO
@@ -416,14 +420,52 @@ int H264_decoder::parse_slice_idr(uint8_t *nal_buf)
 		DEBUG_PRINT_INFO("idr_pic_id = %u", m_sh.idr_pic_id);
 	}
 
-	m_sh.pic_order_cnt_lsb = get_bit(&nal_buf[1], expG_offset);
-	expG_offset++;
-	DEBUG_PRINT_INFO("pic_order_cnt_lsb = %u", m_sh.pic_order_cnt_lsb);
+	if (m_sps.pic_order_cnt_type == 0) {
+		m_sh.pic_order_cnt_lsb = get_bit(&nal_buf[1], expG_offset);
+		expG_offset++;
+		DEBUG_PRINT_INFO("pic_order_cnt_lsb = %u", m_sh.pic_order_cnt_lsb);
+		//TODO
+		// if( bottom_field_pic_order_in_frame_present_flag && !field_pic_flag )
+	}
 
+	if (m_cur_nh.nal_ref_idc) {
+		if (IdrPicFlag) {
+			m_sh.no_output_of_prior_pics_flag = get_bit(&nal_buf[1], expG_offset);
+			expG_offset++;
+			DEBUG_PRINT_INFO("no_output_of_prior_pics_flag = %u",
+				m_sh.no_output_of_prior_pics_flag);
+
+			m_sh.long_term_reference_flag = get_bit(&nal_buf[1], expG_offset);
+			expG_offset++;
+			DEBUG_PRINT_INFO("long_term_reference_flag = %u",
+				m_sh.long_term_reference_flag);
+		}
+		//TODO else
+	}
 	//TODO other fields
 
 	m_sh.slice_qp_delta = signed_exp_golomb_decode(&nal_buf[1], &expG_offset);
 	DEBUG_PRINT_INFO("slice_qp_delta = %d", m_sh.slice_qp_delta);
+
+	if (m_pps.deblocking_filter_control_present_flag) {
+		m_sh.disable_deblocking_filter_idc = exp_golomb_decode(&nal_buf[1],
+						&expG_offset);
+		DEBUG_PRINT_INFO("disable_deblocking_filter_idc = %u",
+						m_sh.pic_parameter_set_id);
+
+		if (m_sh.disable_deblocking_filter_idc != 1) {
+			m_sh.slice_alpha_c0_offset_div2 = signed_exp_golomb_decode(
+								&nal_buf[1], &expG_offset);
+			DEBUG_PRINT_INFO("slice_alpha_c0_offset_div2 = %d",
+							m_sh.pic_parameter_set_id);
+
+
+			m_sh.slice_beta_offset_div2 = signed_exp_golomb_decode(
+								&nal_buf[1], &expG_offset);
+			DEBUG_PRINT_INFO("slice_beta_offset_div2 = %d",
+							m_sh.pic_parameter_set_id);
+		}
+	}
 
 	/* -----------------------------------------------------------*/
 	/* TODO write a seprate function to write data to output YUV */

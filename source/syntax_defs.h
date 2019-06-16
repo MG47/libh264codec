@@ -95,6 +95,8 @@ struct slice_header {
 	uint8_t field_pic_flag;
 	uint8_t bottom_field_flag;
 	uint8_t idr_pic_id;
+	uint8_t no_output_of_prior_pics_flag;
+	uint8_t long_term_reference_flag;
 	uint8_t pic_order_cnt_lsb;
 	uint8_t delta_pic_order_cnt_bottom;
 	uint8_t delta_pic_order_cnt[2];

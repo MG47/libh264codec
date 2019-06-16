@@ -5,6 +5,7 @@ info
 *.h264
 *.264
 *.yuv
+*.mp4
 out
 build.sh
 encoder_out
