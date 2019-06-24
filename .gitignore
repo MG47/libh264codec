@@ -7,5 +7,5 @@ info
 *.yuv
 *.mp4
 out
-build.sh
 encoder_out
+test_decoder
