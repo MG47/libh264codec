@@ -24,10 +24,9 @@ static inline uint32_t get_bit(void *base, uint8_t offset)
 
 static inline uint32_t get_n_bits(void *base, uint8_t offset, uint8_t count)
 {
-	//TODO n bits
 	uint32_t num = *(uint32_t *)base;
 	num = to_little_endian(num);
-	return ((num >> (31 - offset)) & 0x1);
+	return ((num >> (31 - offset)) & (1 << (count - 1)));
 }
 
 #endif /*__H264_UTILS_H__*/
